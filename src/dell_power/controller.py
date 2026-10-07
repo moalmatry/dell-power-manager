@@ -80,13 +80,12 @@ class DellPowerController:
 
     @classmethod
     def load_config(cls) -> PowerProfile:
-        path = cls._get_config_path()
-        if not os.path.exists(path) and os.path.exists(GLOBAL_CONFIG_PATH):
-            path = GLOBAL_CONFIG_PATH
-
-        if os.path.exists(path):
+        candidates = [GLOBAL_CONFIG_PATH, USER_CONFIG_PATH]
+        existing = [p for p in candidates if os.path.exists(p)]
+        if existing:
+            best_path = max(existing, key=lambda p: os.path.getmtime(p))
             try:
-                with open(path, "r", encoding="utf-8") as f:
+                with open(best_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     return PowerProfile(
                         mode=data.get("mode", "custom"),
@@ -103,17 +102,13 @@ class DellPowerController:
 
     @classmethod
     def save_config(cls, profile: PowerProfile):
-        path = cls._get_config_path()
-        try:
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(asdict(profile), f, indent=2)
-        except OSError:
-            # If writing to /etc failed as non-root, write to user config
-            if path != USER_CONFIG_PATH:
-                os.makedirs(os.path.dirname(USER_CONFIG_PATH), exist_ok=True)
-                with open(USER_CONFIG_PATH, "w", encoding="utf-8") as f:
+        for path in [GLOBAL_CONFIG_PATH, USER_CONFIG_PATH]:
+            try:
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "w", encoding="utf-8") as f:
                     json.dump(asdict(profile), f, indent=2)
+            except OSError:
+                pass
 
     @staticmethod
     def _run_privileged(cmd: list[str]) -> tuple[bool, str]:

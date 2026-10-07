@@ -7,8 +7,9 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("GLib", "2.0")
 from gi.repository import GLib, Gtk, Gdk
 
+import time
 from .battery import BatteryReader, BatteryStats
-from .controller import DellPowerController, PROFILES
+from .controller import DellPowerController, PROFILES, PowerProfile
 
 CSS_DATA = b"""
 window {
@@ -112,6 +113,7 @@ class DellPowerWindow(Gtk.Window):
         # Initial populate & timer
         self._update_telemetry()
         self._sync_active_profile()
+        self.connect("delete-event", self._on_delete_event)
         GLib.timeout_add_seconds(2, self._on_timer_tick)
 
     def _build_telemetry_card(self) -> Gtk.Box:
@@ -244,6 +246,8 @@ class DellPowerWindow(Gtk.Window):
         self.custom_box.pack_start(self.spin_start, False, False, 0)
         self.custom_box.pack_start(lbl_stop, False, False, 0)
         self.custom_box.pack_start(self.spin_stop, False, False, 0)
+        self.spin_start.connect("value-changed", lambda _: self._save_current_selection())
+        self.spin_stop.connect("value-changed", lambda _: self._save_current_selection())
 
         card.pack_start(self.custom_box, False, False, 0)
         return card
@@ -291,6 +295,44 @@ class DellPowerWindow(Gtk.Window):
     def _on_radio_toggled(self, radio: Gtk.RadioButton, key: str):
         if radio.get_active():
             self.custom_box.set_sensitive(key == "custom")
+            self._save_current_selection()
+
+    def _save_current_selection(self):
+        selected_key = None
+        for k, radio in self.profile_radios.items():
+            if radio.get_active():
+                selected_key = k
+                break
+        if not selected_key:
+            return
+
+        if selected_key == "custom":
+            start = int(self.spin_start.get_value())
+            stop = int(self.spin_stop.get_value())
+            profile = PowerProfile(
+                mode="custom",
+                custom_start=start,
+                custom_end=stop,
+                description=f"Custom: Start {start}%, Stop {stop}%",
+                last_applied=time.time(),
+            )
+        elif selected_key in PROFILES:
+            prof = PROFILES[selected_key]
+            profile = PowerProfile(
+                mode=prof["mode"],
+                custom_start=prof.get("start", 50),
+                custom_end=prof.get("end", 55),
+                description=prof.get("title", ""),
+                last_applied=time.time(),
+            )
+        else:
+            profile = PowerProfile(mode=selected_key, description=selected_key.title(), last_applied=time.time())
+
+        DellPowerController.save_config(profile)
+
+    def _on_delete_event(self, _widget, _event):
+        self._save_current_selection()
+        return False
 
     def _sync_active_profile(self):
         cfg = DellPowerController.load_config()
