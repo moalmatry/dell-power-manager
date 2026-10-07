@@ -173,7 +173,7 @@ class DellPowerWindow(Gtk.Window):
         card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         card.get_style_context().add_class("card")
 
-        title = Gtk.Label(label="<b>Charging Profiles & Limits</b>", use_markup=True, xalign=0.0)
+        title = Gtk.Label(label="<b>Charging Profiles &amp; Limits</b>", use_markup=True, xalign=0.0)
         card.pack_start(title, False, False, 0)
 
         self.radio_group = None
