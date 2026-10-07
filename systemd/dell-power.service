@@ -1,0 +1,12 @@
+[Unit]
+Description=Dell Power Manager Battery Threshold Re-apply Service
+Documentation=https://github.com/moalmatry/dell-power-manager
+After=multi-user.target suspend.target hibernate.target hybrid-sleep.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/dell-power apply
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target sleep.target

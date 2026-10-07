@@ -1,0 +1,32 @@
+[project]
+name = "dell-power-manager"
+version = "0.1.0"
+description = "Dell Power Manager for Linux: Limit battery charge threshold (50%, 80%, etc.) and control charging profiles on Dell laptops"
+authors = [
+    { name = "moalmatry" }
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["dell", "power", "battery", "charge-threshold", "smbios", "longevity", "linux", "g15"]
+classifiers = [
+    "Environment :: X11 Applications :: GTK",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Power (UPS)",
+]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/moalmatry/dell-power-manager"
+
+[project.scripts]
+dell-power = "dell_power.cli:main"
+dell-power-gui = "dell_power.gui:main"
+
+[tool.poetry]
+packages = [{ include = "dell_power", from = "src" }]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

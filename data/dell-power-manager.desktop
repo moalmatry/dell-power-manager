@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Dell Power Manager
+GenericName=Battery Charge Controller
+Comment=Limit battery charge threshold (50%, 80%) and control charging profiles
+Exec=/usr/local/bin/dell-power-gui
+Icon=dell-power-manager
+Terminal=false
+Categories=Utility;Settings;HardwareSettings;System;
+Keywords=dell;battery;power;charge;threshold;limit;health;smbios;50%;80%;
+StartupNotify=true
