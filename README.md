@@ -1,8 +1,28 @@
 # Dell Power Manager for Linux 🔋🛡️
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python: 3.10+](https://img.shields.io/badge/python-3.10+-brightgreen.svg)](https://www.python.org/)
+[![Platform: Linux](https://img.shields.io/badge/platform-Linux-orange.svg)](https://www.kernel.org/)
+[![Interface: GTK 3](https://img.shields.io/badge/GUI-GTK%203-blueviolet.svg)](https://www.gtk.org/)
+[![Systemd Service](https://img.shields.io/badge/service-systemd-brightgreen.svg)](systemd/dell-power.service)
+[![Poetry Managed](https://img.shields.io/badge/packaging-poetry-cyan.svg)](https://python-poetry.org/)
+[![GitHub Stars](https://img.shields.io/github/stars/moalmatry/dell-power-manager?style=flat&color=yellow)](https://github.com/moalmatry/dell-power-manager/stargazers)
+
 A native, open-source Linux replacement for **Dell Power Manager** built for Dell laptops (Dell G15, Inspiron, XPS, Alienware, Latitude, Precision).
 
 Easily limit battery charging to **50%** (for maximum battery health while plugged into AC) or **80%** (for longevity with mobility), switch charging profiles, monitor live battery health, and control charging thresholds directly via a **native GTK3 graphical interface** or a **fast command-line tool**.
+
+---
+
+## 📌 Table of Contents
+- [Key Features](#-key-features)
+- [Quick Installation](#-quick-installation)
+- [Graphical Interface (GUI)](#%EF%B8%8F-graphical-interface-gui)
+- [Command-Line Interface (CLI)](#-command-line-interface-cli)
+- [Service & Persistence](#-service--persistence)
+- [Dell Linux Ecosystem](#-dell-linux-ecosystem)
+- [Uninstallation](#%EF%B8%8F-uninstallation)
+- [License](#-license)
 
 ---
 
@@ -145,6 +165,15 @@ To cleanly remove Dell Power Manager:
 cd dell-power-manager
 ./uninstall.sh
 ```
+
+---
+
+## 🌐 Dell Linux Ecosystem
+
+Supercharge your Dell gaming laptop on Linux with companion tools from this suite:
+
+* ⚡ **[dell-gmode](https://github.com/moalmatry/dell-gmode)** — Native Linux background daemon and CLI utility to enable the **Fn+F9 Game Shift (G-Mode)** hardware key, 100% maximum fan cooling boost via Alienware WMAX ACPI, and CPU/GPU performance power profiles.
+* 🌈 **[dell-g15-rgb](https://github.com/moalmatry/dell-g15-rgb)** — Native Linux driver, CLI, and GTK 3 GUI for Dell G15 & Alienware laptops to control AlienFX 4-Zone RGB keyboard lighting, custom hardware effects, brightness, and permanently fix the "stuck on red" backlight issue.
 
 ---
 
