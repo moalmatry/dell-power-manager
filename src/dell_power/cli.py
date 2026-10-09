@@ -33,13 +33,27 @@ def print_status():
     print(f"  Cycles:     {stats.cycle_count}")
     print("-" * 55)
 
-    if cfg.mode == "custom":
-        mode_desc = f"Custom Limit (Start: {cfg.custom_start}%, Stop: {cfg.custom_end}%)"
+    supported, _ = DellPowerController.check_hardware_support()
+    if not supported:
+        print("  OS Charge Control: ⚠️  UNSUPPORTED (AMD Firmware Restriction)")
+        print("-" * 55)
+        print("  [!] HOW TO LIMIT CHARGING ON THIS LAPTOP:")
+        print("  Dell G15 5515 (AMD) requires setting limits in BIOS Setup:")
+        print("    1. Reboot your laptop and tap F2 repeatedly at Dell logo.")
+        print("    2. Navigate to: Power -> Primary Battery Charge Configuration.")
+        print("    3. Change to 'Custom' (Start: 50%, Stop: 55% or 60%).")
+        print("       (Or choose 'Primarily AC Use').")
+        print("    4. Press F10 (Save & Exit).")
+        print("  (The Embedded Controller enforces this limit in hardware!)")
+        print("=" * 55)
     else:
-        mode_desc = cfg.description or cfg.mode.replace("_", " ").title()
+        if cfg.mode == "custom":
+            mode_desc = f"Custom Limit (Start: {cfg.custom_start}%, Stop: {cfg.custom_end}%)"
+        else:
+            mode_desc = cfg.description or cfg.mode.replace("_", " ").title()
 
-    print(f"  Active Profile: 🛡️  {mode_desc}")
-    print("=" * 55)
+        print(f"  Active Profile: 🛡️  {mode_desc}")
+        print("=" * 55)
 
 
 def main():
@@ -120,6 +134,10 @@ def main():
         if ok:
             print(f"[✓] Reapplied saved configuration: {msg}")
         else:
+            supported, _ = DellPowerController.check_hardware_support()
+            if not supported:
+                print(f"[!] Notice: Hardware-level BIOS configuration active ({msg})")
+                sys.exit(0)
             print(f"[✗] Error: {msg}", file=sys.stderr)
             sys.exit(1)
     elif args.command == "gui":

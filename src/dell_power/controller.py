@@ -150,9 +150,41 @@ class DellPowerController:
             except Exception:
                 pass
 
+    _hardware_support: tuple[bool, str] | None = None
+
+    @classmethod
+    def check_hardware_support(cls, force_check: bool = False) -> tuple[bool, str]:
+        """Checks if the hardware actually supports setting battery charging parameters via SMBIOS/SMI."""
+        if cls._hardware_support is not None and not force_check:
+            return cls._hardware_support
+
+        smbios_bin = shutil.which("smbios-battery-ctl") or "/usr/sbin/smbios-battery-ctl"
+        if not os.path.exists(smbios_bin):
+            cls._hardware_support = (False, "smbios-battery-ctl utility not found.")
+            return cls._hardware_support
+
+        ok, out = cls._run_privileged([smbios_bin, "-c"])
+        if not ok or "Unable to read Current Battery Charging State" in out:
+            cls._hardware_support = (
+                False,
+                (
+                    "Hardware limitation: On Dell G15 5515 (AMD Ryzen edition), Dell firmware disables "
+                    "runtime battery charge writes via SMBIOS/SMI. You must configure the charge threshold "
+                    "directly in the BIOS Setup (reboot, tap F2 -> Power -> Primary Battery Charge Configuration -> Custom)."
+                ),
+            )
+            return cls._hardware_support
+
+        cls._hardware_support = (True, "Supported")
+        return cls._hardware_support
+
     @classmethod
     def apply_custom_limits(cls, start: int, end: int, notify: bool = True) -> tuple[bool, str]:
         """Sets custom start and stop charging percentage thresholds."""
+        supported, reason = cls.check_hardware_support()
+        if not supported:
+            return False, reason
+
         if start < 50 or start > 95:
             return False, "Start threshold must be between 50% and 95%."
         if end < 55 or end > 100:
@@ -196,6 +228,10 @@ class DellPowerController:
     @classmethod
     def apply_mode(cls, mode_name: str, notify: bool = True) -> tuple[bool, str]:
         """Sets standard charging mode: primarily_ac, adaptive, standard, express."""
+        supported, reason = cls.check_hardware_support()
+        if not supported:
+            return False, reason
+
         valid_modes = {"primarily_ac", "adaptive", "standard", "express"}
         if mode_name not in valid_modes:
             return False, f"Invalid mode '{mode_name}'. Valid choices: {', '.join(valid_modes)}"

@@ -49,6 +49,10 @@ Easily limit battery charging to **50%** (for maximum battery health while plugg
 * **⚡ Persistence Across Reboots:**
   * Includes a systemd service (`dell-power.service`) that automatically re-enforces your chosen charging threshold on boot and resume from sleep/suspend.
 
+> [!NOTE]
+> **Hardware Compatibility Note (e.g., Dell G15 5515 AMD):**
+> On certain Dell models (such as the Dell G15 AMD Ryzen edition), Dell firmware disables operating-system runtime battery writes via SMBIOS/SMI. On these systems, `dell-power` provides full telemetry & diagnostics, detects the firmware restriction, and guides you to set the threshold once in Dell BIOS Setup (**F2** on boot → **Power** → **Primary Battery Charge Configuration** → **Custom**). Once set in BIOS, the Embedded Controller enforces the limit permanently at the hardware level.
+
 ---
 
 ## 🚀 Quick Installation

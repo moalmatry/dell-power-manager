@@ -64,6 +64,19 @@ window {
     border-radius: 8px;
     padding: 10px 24px;
 }
+.card-warning {
+    background-color: #fff9db;
+    border: 1px solid #fab005;
+}
+.warning-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #d9480f;
+}
+.warning-text {
+    font-size: 12px;
+    color: #495057;
+}
 """
 
 
@@ -101,6 +114,11 @@ class DellPowerWindow(Gtk.Window):
         main_box.set_margin_end(16)
         scrolled.add(main_box)
 
+        # 0. Notice Card (if hardware SMBIOS write is unsupported)
+        notice_card = self._build_hardware_notice_card()
+        if notice_card:
+            main_box.pack_start(notice_card, False, False, 0)
+
         # 1. Telemetry Card
         main_box.pack_start(self._build_telemetry_card(), False, False, 0)
 
@@ -115,6 +133,40 @@ class DellPowerWindow(Gtk.Window):
         self._sync_active_profile()
         self.connect("delete-event", self._on_delete_event)
         GLib.timeout_add_seconds(2, self._on_timer_tick)
+
+    def _build_hardware_notice_card(self) -> Gtk.Box | None:
+        supported, _ = DellPowerController.check_hardware_support()
+        if supported:
+            return None
+
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        card.get_style_context().add_class("card")
+        card.get_style_context().add_class("card-warning")
+
+        lbl_title = Gtk.Label(
+            label="⚠️ BIOS Setup Required on Dell G15 5515 (AMD)",
+            xalign=0.0,
+        )
+        lbl_title.get_style_context().add_class("warning-title")
+        card.pack_start(lbl_title, False, False, 0)
+
+        lbl_desc = Gtk.Label(
+            label=(
+                "Dell's firmware on this AMD model disables runtime battery charge writes from Linux.\n\n"
+                "<b>To permanently stop charging at 50% or 60%:</b>\n"
+                "• Reboot your laptop and tap <b>F2</b> repeatedly.\n"
+                "• Navigate to: <b>Power → Primary Battery Charge Configuration</b>.\n"
+                "• Select <b>Custom</b> (Start: <b>50%</b>, Stop: <b>55%</b> or 60%) or <b>Primarily AC</b>.\n"
+                "• Press <b>F10</b> (Save &amp; Exit).\n\n"
+                "<i>The laptop hardware/EC will permanently enforce this limit.</i>"
+            ),
+            use_markup=True,
+            xalign=0.0,
+        )
+        lbl_desc.set_line_wrap(True)
+        lbl_desc.get_style_context().add_class("warning-text")
+        card.pack_start(lbl_desc, False, False, 0)
+        return card
 
     def _build_telemetry_card(self) -> Gtk.Box:
         card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -379,8 +431,11 @@ class DellPowerWindow(Gtk.Window):
         elif stats.status.lower() == "charging":
             self.pill_status.set_text("Charging")
             st.add_class("status-charging")
+        elif stats.status.lower() in ("not charging", "full"):
+            self.pill_status.set_text("Plugged In (Idle)")
+            st.add_class("status-idle")
         else:
-            self.pill_status.set_text("Limit Active")
+            self.pill_status.set_text(stats.status_display)
             st.add_class("status-idle")
 
     def _on_timer_tick(self) -> bool:
@@ -395,6 +450,29 @@ class DellPowerWindow(Gtk.Window):
                 break
 
         if not selected_key:
+            return
+
+        supported, _ = DellPowerController.check_hardware_support()
+        if not supported:
+            dialog = Gtk.MessageDialog(
+                transient_for=self,
+                flags=0,
+                message_type=Gtk.MessageType.INFO,
+                buttons=Gtk.ButtonsType.OK,
+                text="BIOS Setup Required (Dell G15 AMD Edition)",
+            )
+            dialog.format_secondary_markup(
+                "Dell's firmware on this AMD model disables runtime battery charge writes from Linux.\n\n"
+                "<b>To permanently limit battery charging:</b>\n"
+                "1. Reboot your laptop and tap <b>F2</b> at the Dell logo.\n"
+                "2. Navigate to: <b>Power → Primary Battery Charge Configuration</b>.\n"
+                "3. Choose <b>Custom</b> (Start: <b>50%</b>, Stop: <b>55%</b> or 60%) or <b>Primarily AC</b>.\n"
+                "4. Press <b>F10</b> (Save &amp; Exit).\n\n"
+                "Once saved in BIOS, hardware will enforce this limit across all operating systems!"
+            )
+            dialog.run()
+            dialog.destroy()
+            self.lbl_feedback.set_markup("<span color='#d9480f'><b>⚠️ Please configure battery limit in BIOS (F2 on reboot)</b></span>")
             return
 
         self.lbl_feedback.set_text("Applying settings to Dell BIOS...")
