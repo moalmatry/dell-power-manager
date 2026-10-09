@@ -181,10 +181,6 @@ class DellPowerController:
     @classmethod
     def apply_custom_limits(cls, start: int, end: int, notify: bool = True) -> tuple[bool, str]:
         """Sets custom start and stop charging percentage thresholds."""
-        supported, reason = cls.check_hardware_support()
-        if not supported:
-            return False, reason
-
         if start < 50 or start > 95:
             return False, "Start threshold must be between 50% and 95%."
         if end < 55 or end > 100:
@@ -228,10 +224,6 @@ class DellPowerController:
     @classmethod
     def apply_mode(cls, mode_name: str, notify: bool = True) -> tuple[bool, str]:
         """Sets standard charging mode: primarily_ac, adaptive, standard, express."""
-        supported, reason = cls.check_hardware_support()
-        if not supported:
-            return False, reason
-
         valid_modes = {"primarily_ac", "adaptive", "standard", "express"}
         if mode_name not in valid_modes:
             return False, f"Invalid mode '{mode_name}'. Valid choices: {', '.join(valid_modes)}"
